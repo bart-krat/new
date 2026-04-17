@@ -21,7 +21,7 @@ class TestTask:
         assert task.id == "123"
         assert task.text == "Test task"
         assert task.category is None
-        assert task.duration_minutes is None
+        assert task.duration_minutes == 30  # Default 30 minutes
         assert task.deadline is None
         assert task.confirmed is False
 

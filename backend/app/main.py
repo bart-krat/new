@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .models import (
     CategorizeInput,
     Constraints,
     ConstraintsSaveResponse,
+    FixedTimeConstraint,
+    FixedTimeConstraintsInput,
+    FixedTimeConstraintsResponse,
     HealthResponse,
     OptimizeInput,
     OptimizeResponse,
@@ -85,3 +88,46 @@ def optimize_tasks(input: OptimizeInput):
 def get_schedule():
     schedule = orchestrator.get_schedule()
     return ScheduleResponse(schedule=schedule)
+
+
+@app.post("/api/fixed-time-constraints", response_model=FixedTimeConstraintsResponse)
+def save_fixed_time_constraints(input: FixedTimeConstraintsInput):
+    """Save fixed time constraints for tasks."""
+    count = manager.save_fixed_time_constraints(input.constraints)
+    return FixedTimeConstraintsResponse(saved=True, count=count)
+
+
+@app.get("/api/fixed-time-constraints")
+def get_fixed_time_constraints():
+    """Get all fixed time constraints."""
+    constraints = manager.get_fixed_time_constraints()
+    return {"constraints": [c.model_dump() for c in constraints]}
+
+
+@app.put("/api/tasks/{task_id}/fixed-time-constraint")
+def set_task_fixed_constraint(task_id: str, constraint: FixedTimeConstraint):
+    """Set a fixed time constraint for a specific task."""
+    task = manager.set_task_fixed_constraint(
+        task_id, constraint.start_minutes, constraint.end_minutes
+    )
+    if task:
+        return task.model_dump()
+    raise HTTPException(status_code=404, detail="Task not found")
+
+
+@app.delete("/api/tasks/{task_id}/fixed-time-constraint")
+def clear_task_fixed_constraint(task_id: str):
+    """Remove fixed time constraint from a task."""
+    task = manager.clear_task_fixed_constraint(task_id)
+    if task:
+        return task.model_dump()
+    raise HTTPException(status_code=404, detail="Task not found")
+
+
+@app.put("/api/tasks/{task_id}/duration")
+def update_task_duration(task_id: str, duration: dict):
+    """Update the duration of a task."""
+    task = manager.update_task(task_id, duration_minutes=duration.get("duration_minutes"))
+    if task:
+        return task.model_dump()
+    raise HTTPException(status_code=404, detail="Task not found")

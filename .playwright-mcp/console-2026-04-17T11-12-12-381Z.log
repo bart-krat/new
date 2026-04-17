@@ -1,0 +1,82 @@
+[      52ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:21548
+[     102ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5173/favicon.ico:0
+[   90615ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/ceb84785-fd37-43d7-90e5-b1a7ffdb4216/fixed-time-constraint:0
+[   90617ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s 
+
+Check the render method of `App`.  
+    at li
+    at App (http://localhost:5173/src/App.tsx?t=1776424047889:43:37) @ http://localhost:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=20155631:61
+[  117315ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/8ac943a0-e9e8-4d33-a7df-21ae48ebd6df/fixed-time-constraint:0
+[  120397ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/undefined/fixed-time-constraint:0
+[  195468ms] [ERROR] Failed to load resource: the server responded with a status of 422 (Unprocessable Entity) @ http://localhost:8000/api/optimize:0
+[  277723ms] ReferenceError: FixedTimeConstraintEditor is not defined
+    at http://localhost:5173/src/App.tsx?t=1776424610065:259:17
+    at Array.map (<anonymous>)
+    at App (http://localhost:5173/src/App.tsx?t=1776424610065:207:105)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:11546:26)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:14580:28)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:15922:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:3672:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:3697:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:3731:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:19763:15)
+[  277724ms] ReferenceError: FixedTimeConstraintEditor is not defined
+    at http://localhost:5173/src/App.tsx?t=1776424610065:259:17
+    at Array.map (<anonymous>)
+    at App (http://localhost:5173/src/App.tsx?t=1776424610065:207:105)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:11546:26)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:14580:28)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:15922:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:3672:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:3697:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:3731:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:19763:15)
+[  277724ms] [ERROR] The above error occurred in the <App> component:
+
+    at App (http://localhost:5173/src/App.tsx?t=1776424610065:42:37)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:14029
+[  277725ms] ReferenceError: FixedTimeConstraintEditor is not defined
+    at http://localhost:5173/src/App.tsx?t=1776424610065:259:17
+    at Array.map (<anonymous>)
+    at App (http://localhost:5173/src/App.tsx?t=1776424610065:207:105)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:11546:26)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:14580:28)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:15922:22)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:19751:22)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:19196:20)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:19135:13)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:19114:15)
+[  354415ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:21548
+[  376457ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/136473ea-0f8c-48b1-9a46-a265a4e439ce/fixed-time-constraint:0
+[  376459ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s 
+
+Check the render method of `App`.  
+    at li
+    at App (http://localhost:5173/src/App.tsx?t=1776424629829:44:37) @ http://localhost:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=20155631:61
+[  387039ms] [ERROR] Failed to load resource: the server responded with a status of 422 (Unprocessable Entity) @ http://localhost:8000/api/optimize:0
+[  393922ms] [ERROR] Failed to load resource: the server responded with a status of 422 (Unprocessable Entity) @ http://localhost:8000/api/optimize:0
+[  570317ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:21548
+[  585457ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/840afc88-9de0-4a0f-9f6b-e3508d39c8cd/fixed-time-constraint:0
+[  585458ms] [ERROR] Failed to set fixed constraint: Error: Failed to set fixed constraint: 404
+    at setTaskFixedConstraint (http://localhost:5173/src/api.ts?t=1776424869290:85:11)
+    at async handleSetFixedConstraint (http://localhost:5173/src/App.tsx?t=1776424869290:107:27) @ http://localhost:5173/src/App.tsx?t=1776424869290:111
+[  693995ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/90ebbcd9-ca49-4cb1-bd7f-9c9003aa5f1c/fixed-time-constraint:0
+[  693995ms] [ERROR] Failed to set fixed constraint: Error: Failed to set fixed constraint: 404
+    at setTaskFixedConstraint (http://localhost:5173/src/api.ts?t=1776424869290:85:11)
+    at async handleSetFixedConstraint (http://localhost:5173/src/App.tsx?t=1776424869290:107:27) @ http://localhost:5173/src/App.tsx?t=1776424869290:111
+[  699362ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/50e918b2-c116-4f48-a88b-c7c8cc9dd29b/fixed-time-constraint:0
+[  699362ms] [ERROR] Failed to set fixed constraint: Error: Failed to set fixed constraint: 404
+    at setTaskFixedConstraint (http://localhost:5173/src/api.ts?t=1776424869290:85:11)
+    at async handleSetFixedConstraint (http://localhost:5173/src/App.tsx?t=1776424869290:107:27) @ http://localhost:5173/src/App.tsx?t=1776424869290:111
+[  854556ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:21548
+[  873585ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8000/api/tasks/adebd1cd-4cc3-49c5-940e-fb2e7b6ae4ef/fixed-time-constraint:0
+[  873585ms] [ERROR] Failed to set fixed constraint: Error: Failed to set fixed constraint: 404
+    at setTaskFixedConstraint (http://localhost:5173/src/api.ts?t=1776425033360:89:11)
+    at async handleSetFixedConstraint (http://localhost:5173/src/App.tsx?t=1776425171736:107:27) @ http://localhost:5173/src/App.tsx?t=1776425171736:111
+[ 1018215ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:21548
+[ 1362227ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:21548
+[ 1362234ms] [ERROR] Access to fetch at 'http://localhost:8000/api/constraints' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://localhost:5173/:0
+[ 1362234ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:8000/api/constraints:0
+[ 1448258ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/chunk-373CG7ZK.js?v=89d098e1:21548

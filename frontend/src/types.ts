@@ -1,10 +1,17 @@
+export interface FixedTimeConstraint {
+  task_id: string;
+  start_minutes: number;  // Minutes from start of day (0-1439)
+  end_minutes: number;    // Minutes from start of day (0-1439)
+}
+
 export interface Task {
   id: string;
   text: string;
   category: string | null;
-  duration_minutes: number | null;
+  duration_minutes: number;  // Default 30 minutes
   deadline: string | null;
   confirmed: boolean;
+  fixed_time_constraint: FixedTimeConstraint | null;
 }
 
 export interface TasksResponse {

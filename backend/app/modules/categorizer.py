@@ -17,9 +17,7 @@ Rules:
 - "work" = job tasks, meetings, professional development, emails
 - "health" = exercise, medical, nutrition, mental health, sleep
 
-Also estimate duration in minutes (15-480 range, in 15-min increments).
-
-Respond with JSON array: [{"text": "task text", "category": "category", "duration_minutes": number}]
+Respond with JSON array: [{"text": "task text", "category": "category"}]
 Only return valid JSON, no other text."""
 
 
@@ -55,7 +53,7 @@ def categorize_tasks(tasks: list[Task]) -> list[Task]:
 
         categorized = json.loads(content)
 
-        # Map results back to tasks
+        # Map results back to tasks (only update category, preserve duration)
         result = []
         for task in tasks:
             matching = next(
@@ -64,11 +62,9 @@ def categorize_tasks(tasks: list[Task]) -> list[Task]:
             )
             if matching:
                 task.category = matching.get("category", "personal")
-                task.duration_minutes = matching.get("duration_minutes", 30)
             else:
                 # Fallback if no match found
                 task.category = "personal"
-                task.duration_minutes = 30
             result.append(task)
 
         logger.info(f"Categorized {len(result)} tasks via OpenAI")
@@ -83,7 +79,7 @@ def categorize_tasks(tasks: list[Task]) -> list[Task]:
 
 
 def _fallback_categorize(tasks: list[Task]) -> list[Task]:
-    """Simple keyword-based fallback categorization."""
+    """Simple keyword-based fallback categorization. Only sets category, preserves duration."""
     work_keywords = ["meeting", "email", "report", "project", "deadline", "client", "presentation", "review", "call"]
     health_keywords = ["gym", "workout", "doctor", "exercise", "run", "yoga", "meditation", "sleep", "eat", "meal"]
 
@@ -91,12 +87,9 @@ def _fallback_categorize(tasks: list[Task]) -> list[Task]:
         text_lower = task.text.lower()
         if any(kw in text_lower for kw in health_keywords):
             task.category = "health"
-            task.duration_minutes = 45
         elif any(kw in text_lower for kw in work_keywords):
             task.category = "work"
-            task.duration_minutes = 60
         else:
             task.category = "personal"
-            task.duration_minutes = 30
 
     return tasks

@@ -5,7 +5,7 @@ import os
 import uuid
 from typing import TYPE_CHECKING, Optional
 
-from ..models import Constraints, Task
+from ..models import Constraints, FixedTimeConstraint, Task
 
 if TYPE_CHECKING:
     from ..models import Schedule
@@ -15,9 +15,13 @@ DATA_FILE = os.path.join(os.path.dirname(__file__), "data.json")
 
 def _load_data() -> dict:
     if not os.path.exists(DATA_FILE):
-        return {"tasks": [], "schedule": None, "constraints": None}
+        return {"tasks": [], "schedule": None, "constraints": None, "fixed_time_constraints": []}
     with open(DATA_FILE, "r") as f:
-        return json.load(f)
+        data = json.load(f)
+        # Ensure fixed_time_constraints key exists for backwards compatibility
+        if "fixed_time_constraints" not in data:
+            data["fixed_time_constraints"] = []
+        return data
 
 
 def _save_data(data: dict) -> None:
@@ -29,7 +33,7 @@ def add_tasks(task_texts: list[str]) -> list[Task]:
     data = _load_data()
     new_tasks = []
     for text in task_texts:
-        task = Task(id=str(uuid.uuid4()), text=text)
+        task = Task(id=str(uuid.uuid4()), text=text, duration_minutes=30)
         new_tasks.append(task)
         data["tasks"].append(task.model_dump())
     _save_data(data)
@@ -111,3 +115,79 @@ def get_schedule() -> Optional[Schedule]:
     if s:
         return ScheduleModel(**s)
     return None
+
+
+def save_fixed_time_constraints(constraints: list[FixedTimeConstraint]) -> int:
+    """Save fixed time constraints. Returns count of saved constraints."""
+    data = _load_data()
+    data["fixed_time_constraints"] = [c.model_dump() for c in constraints]
+
+    # Also update tasks with their fixed time constraints
+    task_constraint_map = {c.task_id: c for c in constraints}
+    for task in data["tasks"]:
+        task_id = task["id"]
+        if task_id in task_constraint_map:
+            task["fixed_time_constraint"] = task_constraint_map[task_id].model_dump()
+        else:
+            task["fixed_time_constraint"] = None
+
+    _save_data(data)
+    return len(constraints)
+
+
+def get_fixed_time_constraints() -> list[FixedTimeConstraint]:
+    """Get all saved fixed time constraints."""
+    data = _load_data()
+    return [FixedTimeConstraint(**c) for c in data.get("fixed_time_constraints", [])]
+
+
+def set_task_fixed_constraint(
+    task_id: str, start_minutes: int, end_minutes: int
+) -> Optional[Task]:
+    """Set a fixed time constraint for a specific task."""
+    constraint = FixedTimeConstraint(
+        task_id=task_id,
+        start_minutes=start_minutes,
+        end_minutes=end_minutes,
+    )
+
+    data = _load_data()
+
+    # Update the task
+    for task in data["tasks"]:
+        if task["id"] == task_id:
+            task["fixed_time_constraint"] = constraint.model_dump()
+            break
+    else:
+        return None
+
+    # Update the constraints list
+    ftc_list = data.get("fixed_time_constraints", [])
+    # Remove existing constraint for this task if any
+    ftc_list = [c for c in ftc_list if c["task_id"] != task_id]
+    ftc_list.append(constraint.model_dump())
+    data["fixed_time_constraints"] = ftc_list
+
+    _save_data(data)
+    return get_task_by_id(task_id)
+
+
+def clear_task_fixed_constraint(task_id: str) -> Optional[Task]:
+    """Remove fixed time constraint from a task."""
+    data = _load_data()
+
+    # Update the task
+    for task in data["tasks"]:
+        if task["id"] == task_id:
+            task["fixed_time_constraint"] = None
+            break
+    else:
+        return None
+
+    # Update the constraints list
+    ftc_list = data.get("fixed_time_constraints", [])
+    ftc_list = [c for c in ftc_list if c["task_id"] != task_id]
+    data["fixed_time_constraints"] = ftc_list
+
+    _save_data(data)
+    return get_task_by_id(task_id)

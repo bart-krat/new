@@ -8,15 +8,16 @@ describe('Type definitions', () => {
         id: '123',
         text: 'Test task',
         category: null,
-        duration_minutes: null,
+        duration_minutes: 30,
         deadline: null,
         confirmed: false,
+        fixed_time_constraint: null,
       };
 
       expectTypeOf(task.id).toBeString();
       expectTypeOf(task.text).toBeString();
       expectTypeOf(task.category).toEqualTypeOf<string | null>();
-      expectTypeOf(task.duration_minutes).toEqualTypeOf<number | null>();
+      expectTypeOf(task.duration_minutes).toBeNumber();
       expectTypeOf(task.deadline).toEqualTypeOf<string | null>();
       expectTypeOf(task.confirmed).toBeBoolean();
     });
@@ -29,6 +30,7 @@ describe('Type definitions', () => {
         duration_minutes: 60,
         deadline: '2024-12-31',
         confirmed: true,
+        fixed_time_constraint: null,
       };
 
       expectTypeOf(task.category).toEqualTypeOf<string | null>();

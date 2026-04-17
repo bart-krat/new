@@ -79,11 +79,30 @@ None - all scenarios were testable.
 
 ---
 
+## Fixed Issues
+
+### [FIXED] FAIL-001: Schedule displays "Unknown task" for orphaned/stale schedule entries
+
+**Root cause:** `clearAllTasks()` only cleared tasks but left the schedule intact. When the schedule was loaded, it referenced task IDs that no longer existed.
+
+**Fix applied:**
+1. Modified `backend/app/state/manager.py` - `clear_tasks()` now also sets `schedule = None`
+2. Modified `frontend/src/App.tsx` - initialization now awaits `clearAllTasks()` and sets schedule to null instead of fetching stale data
+
+### [FIXED] FAIL-002: CORS errors when fetching constraints and schedule on page load
+
+**Root cause:** Race condition - multiple API requests fired simultaneously while the DELETE request was in progress, causing intermittent CORS errors.
+
+**Fix applied:**
+1. Modified `frontend/src/App.tsx` - converted initialization to async/await pattern, ensuring `clearAllTasks()` completes before fetching constraints
+2. Removed redundant `getSchedule()` call since schedule is cleared with tasks
+
+---
+
 ## Notes
 
-1. **Favicon missing:** Console shows 404 for `/favicon.ico` - minor cosmetic issue
-2. **State inconsistency:** Tasks don't persist across page reloads (cleared), but schedule and constraints do persist. This creates the orphaned schedule bug.
-3. **Good UX patterns observed:**
+1. **Favicon missing:** Console shows 404 for `/favicon.ico` - minor cosmetic issue (non-blocking)
+2. **Good UX patterns observed:**
    - Clear error messaging for edge cases
    - Visual indicators (colored category badges, checkmark for valid weights)
    - Algorithm name displayed in schedule ("Generated using: greedy algorithm")

@@ -17,7 +17,8 @@ class TestFallbackCategorize:
         ]
         result = _fallback_categorize(tasks)
         assert all(t.category == "work" for t in result)
-        assert all(t.duration_minutes == 60 for t in result)
+        # Categorizer should not change duration - it stays at default 30
+        assert all(t.duration_minutes == 30 for t in result)
 
     def test_categorizes_health_keywords(self):
         """Tasks with health keywords get health category."""
@@ -29,7 +30,8 @@ class TestFallbackCategorize:
         ]
         result = _fallback_categorize(tasks)
         assert all(t.category == "health" for t in result)
-        assert all(t.duration_minutes == 45 for t in result)
+        # Categorizer should not change duration - it stays at default 30
+        assert all(t.duration_minutes == 30 for t in result)
 
     def test_categorizes_personal_as_default(self):
         """Tasks without keywords default to personal."""
@@ -40,6 +42,7 @@ class TestFallbackCategorize:
         ]
         result = _fallback_categorize(tasks)
         assert all(t.category == "personal" for t in result)
+        # Categorizer should not change duration - it stays at default 30
         assert all(t.duration_minutes == 30 for t in result)
 
     def test_handles_empty_list(self):
@@ -90,7 +93,7 @@ class TestCategorizeTasks:
         mock_response.choices = [
             MagicMock(
                 message=MagicMock(
-                    content='[{"text": "Go to gym", "category": "health", "duration_minutes": 60}]'
+                    content='[{"text": "Go to gym", "category": "health"}]'
                 )
             )
         ]
@@ -101,7 +104,8 @@ class TestCategorizeTasks:
 
         mock_client.chat.completions.create.assert_called_once()
         assert result[0].category == "health"
-        assert result[0].duration_minutes == 60
+        # Categorizer should not change duration - it stays at default 30
+        assert result[0].duration_minutes == 30
 
     @patch("app.modules.categorizer.OPENAI_API_KEY", "test-key")
     @patch("app.modules.categorizer.OpenAI")

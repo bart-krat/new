@@ -45,7 +45,7 @@ def test_add_tasks_sets_defaults():
     tasks = manager.add_tasks(["Test"])
     task = tasks[0]
     assert task.category is None
-    assert task.duration_minutes is None
+    assert task.duration_minutes == 30  # Default 30 minutes
     assert task.deadline is None
     assert task.confirmed is False
 
@@ -111,4 +111,4 @@ def test_add_empty_list():
 def test_load_data_creates_default_structure():
     """Loading non-existent file returns default structure."""
     data = manager._load_data()
-    assert data == {"tasks": [], "schedule": None, "constraints": None}
+    assert data == {"tasks": [], "schedule": None, "constraints": None, "fixed_time_constraints": []}
