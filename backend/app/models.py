@@ -4,13 +4,26 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class FixedTimeConstraint(BaseModel):
+    """
+    Fixed time constraint for a task.
+    Times are expressed as minutes from start of day (0 = midnight).
+    Example: start_minutes=540 (9:00 AM), end_minutes=600 (10:00 AM)
+    Only the permutation optimizer respects these constraints.
+    """
+    task_id: str
+    start_minutes: int  # Minutes from start of day (0-1439)
+    end_minutes: int    # Minutes from start of day (0-1439)
+
+
 class Task(BaseModel):
     id: str
     text: str
     category: Optional[str] = None
-    duration_minutes: Optional[int] = None
+    duration_minutes: int = 30  # Default 30 minutes
     deadline: Optional[datetime] = None
     confirmed: bool = False
+    fixed_time_constraint: Optional[FixedTimeConstraint] = None
 
 
 class TasksInput(BaseModel):
@@ -68,3 +81,14 @@ class OptimizeResponse(BaseModel):
 
 class ScheduleResponse(BaseModel):
     schedule: Optional[Schedule] = None
+
+
+class FixedTimeConstraintsInput(BaseModel):
+    """Input for saving fixed time constraints."""
+    constraints: list[FixedTimeConstraint]
+
+
+class FixedTimeConstraintsResponse(BaseModel):
+    """Response after saving fixed time constraints."""
+    saved: bool
+    count: int

@@ -8,7 +8,7 @@ from typing import Optional
 from openai import OpenAI
 
 from ..config import OPENAI_API_KEY
-from ..models import Constraints, ScheduledTask, Task, TimeBlock
+from ..models import Constraints, FixedTimeConstraint, ScheduledTask, Task, TimeBlock
 
 logger = logging.getLogger(__name__)
 
@@ -189,30 +189,205 @@ def _place_tasks_in_blocks(
     return scheduled
 
 
+def _minutes_to_time(minutes: int, base_date: datetime) -> datetime:
+    """Convert minutes from start of day to datetime."""
+    hours = minutes // 60
+    mins = minutes % 60
+    return base_date.replace(hour=hours, minute=mins, second=0, microsecond=0)
+
+
+def _time_to_minutes(dt: datetime) -> int:
+    """Convert datetime to minutes from start of day."""
+    return dt.hour * 60 + dt.minute
+
+
+def _is_slot_available(
+    start_time: datetime,
+    end_time: datetime,
+    scheduled: list[ScheduledTask],
+    constraints: Constraints,
+    base_date: datetime,
+) -> bool:
+    """Check if a time slot is available (within blocks and not overlapping)."""
+    # Check if slot is within any available block
+    in_block = False
+    for block in constraints.available_blocks:
+        block_start = _parse_time(block.start, base_date)
+        block_end = _parse_time(block.end, base_date)
+        if start_time >= block_start and end_time <= block_end:
+            in_block = True
+            break
+
+    if not in_block:
+        return False
+
+    # Check for overlaps with already scheduled tasks
+    for st in scheduled:
+        if not (end_time <= st.start_time or start_time >= st.end_time):
+            return False
+
+    return True
+
+
+def _place_tasks_with_fixed_constraints(
+    tasks: list[Task], constraints: Constraints, base_date: datetime
+) -> tuple[list[ScheduledTask], list[Task]]:
+    """
+    Place tasks that have fixed time constraints first.
+    Returns (scheduled_fixed_tasks, remaining_tasks_without_fixed_constraints).
+    """
+    scheduled = []
+    remaining = []
+
+    for task in tasks:
+        if task.fixed_time_constraint:
+            ftc = task.fixed_time_constraint
+            duration = task.duration_minutes or 30
+
+            # The fixed constraint defines a window - place task at the start of window
+            task_start = _minutes_to_time(ftc.start_minutes, base_date)
+            task_end = task_start + timedelta(minutes=duration)
+
+            # Verify the task fits within the constraint window
+            window_end = _minutes_to_time(ftc.end_minutes, base_date)
+            if task_end > window_end:
+                # Task doesn't fit in window, try to fit it anyway at start
+                logger.warning(
+                    f"Task {task.id} duration exceeds fixed time window, placing at window start"
+                )
+
+            # Check if this slot is available
+            if _is_slot_available(task_start, task_end, scheduled, constraints, base_date):
+                scheduled.append(
+                    ScheduledTask(
+                        task_id=task.id,
+                        start_time=task_start,
+                        end_time=task_end,
+                        category=task.category or "personal",
+                    )
+                )
+            else:
+                logger.warning(
+                    f"Fixed time constraint for task {task.id} conflicts, skipping constraint"
+                )
+                remaining.append(task)
+        else:
+            remaining.append(task)
+
+    return scheduled, remaining
+
+
+def _place_tasks_around_fixed(
+    tasks: list[Task],
+    fixed_scheduled: list[ScheduledTask],
+    constraints: Constraints,
+    base_date: datetime,
+) -> list[ScheduledTask]:
+    """Place remaining tasks around already-scheduled fixed tasks."""
+    scheduled = list(fixed_scheduled)
+
+    if not tasks:
+        return scheduled
+
+    # Build list of available slots (gaps between fixed tasks and block boundaries)
+    available_slots = []
+
+    for block in constraints.available_blocks:
+        block_start = _parse_time(block.start, base_date)
+        block_end = _parse_time(block.end, base_date)
+
+        # Find fixed tasks in this block
+        fixed_in_block = [
+            st for st in fixed_scheduled
+            if st.start_time >= block_start and st.end_time <= block_end
+        ]
+        fixed_in_block.sort(key=lambda st: st.start_time)
+
+        # Create slots around fixed tasks
+        current = block_start
+        for fixed in fixed_in_block:
+            if current < fixed.start_time:
+                available_slots.append((current, fixed.start_time))
+            current = fixed.end_time
+
+        if current < block_end:
+            available_slots.append((current, block_end))
+
+    # Place tasks in available slots
+    for task in tasks:
+        duration = task.duration_minutes or 30
+        placed = False
+
+        for i, (slot_start, slot_end) in enumerate(available_slots):
+            slot_duration = int((slot_end - slot_start).total_seconds() / 60)
+
+            if slot_duration >= duration:
+                task_end = slot_start + timedelta(minutes=duration)
+                scheduled.append(
+                    ScheduledTask(
+                        task_id=task.id,
+                        start_time=slot_start,
+                        end_time=task_end,
+                        category=task.category or "personal",
+                    )
+                )
+                # Update the slot
+                if task_end < slot_end:
+                    available_slots[i] = (task_end, slot_end)
+                else:
+                    available_slots.pop(i)
+                placed = True
+                break
+
+        if not placed:
+            logger.debug(f"Could not place task {task.id} in any available slot")
+
+    # Sort by start time
+    scheduled.sort(key=lambda st: st.start_time)
+    return scheduled
+
+
 def permutation_optimize(
     tasks: list[Task], constraints: Constraints, base_date: datetime
 ) -> list[ScheduledTask]:
     """
     Permutation optimizer: Try all orderings to find optimal schedule.
     Best for small task sets (<=8 tasks due to factorial complexity).
+
+    This is the ONLY optimizer that respects fixed time constraints.
+    Tasks with fixed time constraints are placed first at their specified times,
+    then remaining tasks are permuted to find the optimal arrangement.
     """
     if not tasks or not constraints.available_blocks:
         return []
 
-    # Limit to prevent combinatorial explosion
+    # First, place tasks with fixed time constraints
+    fixed_scheduled, remaining_tasks = _place_tasks_with_fixed_constraints(
+        tasks, constraints, base_date
+    )
+
+    # If no remaining tasks, just return fixed tasks
+    if not remaining_tasks:
+        return fixed_scheduled
+
+    # Limit remaining tasks to prevent combinatorial explosion
     MAX_TASKS = 8
-    if len(tasks) > MAX_TASKS:
-        # Fall back to greedy for large task sets
+    if len(remaining_tasks) > MAX_TASKS:
         logger.warning(
-            f"Too many tasks ({len(tasks)}) for permutation, using greedy"
+            f"Too many tasks ({len(remaining_tasks)}) for permutation, using greedy for remaining"
         )
-        return greedy_optimize(tasks, constraints, base_date)
+        return _place_tasks_around_fixed(remaining_tasks, fixed_scheduled, constraints, base_date)
 
-    best_schedule = []
-    best_utility = 0.0
+    best_schedule = fixed_scheduled
+    best_utility = sum(
+        constraints.category_weights.get(st.category, 0.3)
+        for st in fixed_scheduled
+    )
 
-    for perm in permutations(tasks):
-        schedule = _place_tasks_in_blocks(list(perm), constraints, base_date)
+    for perm in permutations(remaining_tasks):
+        schedule = _place_tasks_around_fixed(
+            list(perm), fixed_scheduled, constraints, base_date
+        )
 
         # Calculate total utility of this schedule
         total_utility = sum(
@@ -316,6 +491,13 @@ def select_algorithm(
     num_tasks = len(tasks)
     num_blocks = len(constraints.available_blocks)
     has_deadlines = any(t.deadline for t in tasks)
+    has_fixed_constraints = any(t.fixed_time_constraint for t in tasks)
+
+    # IMPORTANT: If any task has fixed time constraints, MUST use permutation
+    # (only permutation optimizer respects fixed time constraints)
+    if has_fixed_constraints:
+        logger.info("Fixed time constraints detected, forcing permutation optimizer")
+        return "permutation"
 
     # Simple case: few tasks, single block, no deadlines -> greedy
     if num_tasks <= 3 and num_blocks == 1 and not has_deadlines:

@@ -12,7 +12,11 @@ import {
   deleteTask,
   clearAllTasks,
   optimizeTasks,
+  setTaskFixedConstraint,
+  clearTaskFixedConstraint,
+  updateTaskDuration,
 } from './api';
+import { TaskSettings } from './components/TaskSettings';
 import { Task, TimeBlock, Constraints, Schedule } from './types';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -99,6 +103,46 @@ function App() {
     }
   };
 
+  const handleSetFixedConstraint = async (
+    taskId: string,
+    startMinutes: number,
+    endMinutes: number
+  ) => {
+    try {
+      const updatedTask = await setTaskFixedConstraint(taskId, startMinutes, endMinutes);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? updatedTask : t))
+      );
+    } catch (err) {
+      console.error('Failed to set fixed constraint:', err);
+      setError('Failed to set fixed time constraint.');
+    }
+  };
+
+  const handleClearFixedConstraint = async (taskId: string) => {
+    try {
+      const updatedTask = await clearTaskFixedConstraint(taskId);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? updatedTask : t))
+      );
+    } catch (err) {
+      console.error('Failed to clear fixed constraint:', err);
+      setError('Failed to clear fixed time constraint.');
+    }
+  };
+
+  const handleDurationChange = async (taskId: string, duration: number) => {
+    try {
+      const updatedTask = await updateTaskDuration(taskId, duration);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? updatedTask : t))
+      );
+    } catch (err) {
+      console.error('Failed to update duration:', err);
+      setError('Failed to update task duration.');
+    }
+  };
+
   const handleSaveConstraints = async () => {
     const constraints: Constraints = {
       available_blocks: blocks,
@@ -175,50 +219,52 @@ function App() {
             <li
               key={task.id}
               style={{
-                padding: '0.5rem',
+                padding: '0.75rem',
                 marginBottom: '0.5rem',
                 background: '#f5f5f5',
                 borderRadius: '4px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
               }}
             >
-              <span>{task.text}</span>
-              <span style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                {task.category && (
-                  <span
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 500 }}>{task.text}</span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {task.category && (
+                    <span
+                      style={{
+                        background: CATEGORY_COLORS[task.category] || '#888',
+                        color: 'white',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.8rem',
+                      }}
+                    >
+                      {task.category}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => handleDelete(task.id)}
                     style={{
-                      background: CATEGORY_COLORS[task.category] || '#888',
+                      background: '#ef4444',
                       color: 'white',
-                      padding: '0.2rem 0.5rem',
+                      border: 'none',
                       borderRadius: '4px',
+                      padding: '0.2rem 0.5rem',
+                      cursor: 'pointer',
                       fontSize: '0.8rem',
                     }}
                   >
-                    {task.category}
-                  </span>
-                )}
-                {task.duration_minutes && (
-                  <span style={{ fontSize: '0.8rem', color: '#666' }}>
-                    {task.duration_minutes}m
-                  </span>
-                )}
-                <button
-                  onClick={() => handleDelete(task.id)}
-                  style={{
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.2rem 0.5rem',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  Delete
-                </button>
-              </span>
+                    Delete
+                  </button>
+                </div>
+              </div>
+              <TaskSettings
+                taskId={task.id}
+                duration={task.duration_minutes}
+                fixedConstraint={task.fixed_time_constraint}
+                onDurationChange={handleDurationChange}
+                onFixedConstraintSave={handleSetFixedConstraint}
+                onFixedConstraintClear={handleClearFixedConstraint}
+              />
             </li>
           ))}
         </ul>

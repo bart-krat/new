@@ -26,7 +26,7 @@ def test_create_tasks_returns_task_structure(client):
     assert "id" in task
     assert task["text"] == "Test task"
     assert task["category"] is None
-    assert task["duration_minutes"] is None
+    assert task["duration_minutes"] == 30  # Default 30 minutes
     assert task["deadline"] is None
     assert task["confirmed"] is False
 
