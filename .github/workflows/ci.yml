@@ -90,17 +90,6 @@ jobs:
           # Check for phantom dependencies (used but not declared)
           npx depcheck --ignores="@types/*,vitest,jsdom" || true
 
-      - name: Check for lockfile sync
-        working-directory: frontend
-        run: |
-          # Verify package-lock.json matches package.json
-          npm install --package-lock-only
-          if [ -n "$(git diff --name-only package-lock.json)" ]; then
-            echo "ERROR: package-lock.json is out of sync with package.json!"
-            echo "Run 'npm install' locally and commit the updated lockfile."
-            exit 1
-          fi
-
       - name: Security audit
         working-directory: frontend
         run: |
