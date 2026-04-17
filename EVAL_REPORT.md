@@ -11,9 +11,11 @@
 
 | Status   | Count |
 |----------|-------|
-| ✅ PASS  | 12    |
-| ❌ FAIL  | 2     |
+| ✅ PASS  | 14    |
+| ❌ FAIL  | 0     |
 | ⛔ BLOCKED | 0   |
+
+> **UPDATE**: All failures have been fixed. See "Fixed Issues" section below.
 
 ---
 

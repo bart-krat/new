@@ -12,7 +12,6 @@ import {
   deleteTask,
   clearAllTasks,
   optimizeTasks,
-  getSchedule,
 } from './api';
 import { Task, TimeBlock, Constraints, Schedule } from './types';
 
