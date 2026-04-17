@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/venv/
+
+# Build outputs
+frontend/dist/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+backend/.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# State files (prototype)
+backend/app/state/data.json
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
