@@ -66,6 +66,7 @@ def update_task(task_id: str, **kwargs) -> Optional[Task]:
 def clear_tasks() -> None:
     data = _load_data()
     data["tasks"] = []
+    data["schedule"] = None  # Also clear schedule when tasks are cleared
     _save_data(data)
 
 

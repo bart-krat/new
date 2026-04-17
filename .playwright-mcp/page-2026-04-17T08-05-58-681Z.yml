@@ -1,0 +1,73 @@
+- generic [ref=e3]:
+  - heading "AI Daily Planner" [level=1] [ref=e4]
+  - paragraph [ref=e5]: "Backend status: ✓ Connected"
+  - generic [ref=e6]:
+    - heading "Add Tasks" [level=2] [ref=e7]
+    - textbox "Enter tasks separated by commas (e.g., buy groceries, finish report, call mom)" [ref=e8]
+    - button "Add Tasks" [disabled] [ref=e9]
+  - heading "Your Tasks" [level=2] [ref=e10]
+  - list [ref=e63]:
+    - listitem [ref=e64]:
+      - generic [ref=e65]: buy groceries
+      - generic [ref=e66]:
+        - generic [ref=e67]: personal
+        - generic [ref=e68]: 60m
+        - button "Delete" [ref=e69] [cursor=pointer]
+    - listitem [ref=e70]:
+      - generic [ref=e71]: finish report
+      - generic [ref=e72]:
+        - generic [ref=e73]: work
+        - generic [ref=e74]: 120m
+        - button "Delete" [ref=e75] [cursor=pointer]
+  - separator [ref=e12]
+  - heading "Planning Settings" [level=2] [ref=e13]
+  - generic [ref=e14]:
+    - heading "Available Time Blocks" [level=3] [ref=e15]
+    - paragraph [ref=e16]: Add time blocks when you're available to work on tasks
+    - generic [ref=e17]:
+      - textbox [ref=e18]: 09:00
+      - generic [ref=e19]: to
+      - textbox [ref=e20]: 12:00
+      - button "Add Block" [ref=e21]
+  - generic [ref=e22]:
+    - heading "Category Priorities" [level=3] [ref=e23]
+    - paragraph [ref=e24]: Adjust sliders to set priority for each category (should sum to 1.0)
+    - generic [ref=e25]:
+      - generic [ref=e26]: "Work: 0.40"
+      - slider [ref=e27]: "0.4"
+    - generic [ref=e28]:
+      - generic [ref=e29]: "Personal: 0.30"
+      - slider [ref=e30]: "0.3"
+    - generic [ref=e31]:
+      - generic [ref=e32]: "Health: 0.30"
+      - slider [ref=e33]: "0.3"
+    - paragraph [ref=e34]: "Total: 1.00 ✓"
+  - button "Save Settings" [ref=e36]
+  - separator [ref=e37]
+  - button "Generate Schedule" [ref=e38] [cursor=pointer]
+  - generic [ref=e39]:
+    - heading "Your Schedule" [level=2] [ref=e40]
+    - paragraph [ref=e87]:
+      - text: "Generated using:"
+      - strong [ref=e88]: greedy
+      - text: algorithm
+    - generic [ref=e41]:
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - generic [ref=e91]: 09:00 AM
+          - generic [ref=e92]: 120 min
+        - generic [ref=e94]:
+          - generic [ref=e95]: finish report
+          - generic [ref=e96]:
+            - generic [ref=e97]: work
+            - generic [ref=e98]: 09:00 AM - 11:00 AM
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - generic [ref=e101]: 11:00 AM
+          - generic [ref=e102]: 60 min
+        - generic [ref=e104]:
+          - generic [ref=e105]: buy groceries
+          - generic [ref=e106]:
+            - generic [ref=e107]: personal
+            - generic [ref=e108]: 11:00 AM - 12:00 PM
+    - paragraph [ref=e62]: 2 tasks scheduled

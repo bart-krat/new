@@ -1,0 +1,235 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify all imports resolve
+        working-directory: backend
+        run: |
+          python -c "from app.main import app; print('All imports OK')"
+
+      - name: Check for security vulnerabilities
+        working-directory: backend
+        run: |
+          pip install pip-audit
+          pip-audit || echo "::warning::Security vulnerabilities found in Python dependencies"
+
+      - name: Run linter (ruff)
+        working-directory: backend
+        run: |
+          ruff check app/ --output-format=github
+
+      - name: Run tests
+        working-directory: backend
+        run: |
+          pytest --tb=short -q
+
+  test-frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verify package-lock.json exists
+        working-directory: frontend
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "ERROR: package-lock.json is missing! Commit it to the repo."
+            exit 1
+          fi
+
+      - name: Clean install dependencies
+        working-directory: frontend
+        run: |
+          rm -rf node_modules
+          npm ci
+
+      - name: Verify no missing dependencies
+        working-directory: frontend
+        run: |
+          # Check for phantom dependencies (used but not declared)
+          npx depcheck --ignores="@types/*,vitest,jsdom" || true
+
+      - name: Check for lockfile sync
+        working-directory: frontend
+        run: |
+          # Verify package-lock.json matches package.json
+          npm install --package-lock-only
+          if [ -n "$(git diff --name-only package-lock.json)" ]; then
+            echo "ERROR: package-lock.json is out of sync with package.json!"
+            echo "Run 'npm install' locally and commit the updated lockfile."
+            exit 1
+          fi
+
+      - name: Security audit
+        working-directory: frontend
+        run: |
+          npm audit --audit-level=high || echo "::warning::Security vulnerabilities found"
+
+      - name: Run linter (ESLint)
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run type check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test:run
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          echo "Getting diff between ${{ github.event.pull_request.base.sha }} and ${{ github.event.pull_request.head.sha }}"
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > changed_files.txt
+          echo "Changed files:"
+          cat changed_files.txt
+
+      - name: Get diff content
+        id: diff
+        run: |
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
+          # Truncate if too large (max ~50KB for API)
+          head -c 50000 diff.txt > diff_truncated.txt
+          echo "Diff size: $(wc -c < diff.txt) bytes"
+
+      - name: Review with Claude
+        id: claude-review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Read the diff
+          DIFF_CONTENT=$(cat diff_truncated.txt)
+          CHANGED_FILES=$(cat changed_files.txt)
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          # Create the prompt
+          PROMPT=$(cat <<'PROMPT_END'
+          You are a senior software engineer reviewing a pull request. Review the following code changes and provide constructive feedback.
+
+          Focus on:
+          1. **Bugs & Logic Errors**: Any potential bugs or incorrect logic
+          2. **Security**: Security vulnerabilities or concerns
+          3. **Performance**: Performance issues or improvements
+          4. **Code Quality**: Readability, maintainability, best practices
+          5. **Testing**: Missing tests or test coverage concerns
+
+          Be concise and actionable. If the code looks good, say so briefly.
+
+          Format your response as:
+          ## Summary
+          [1-2 sentence overview]
+
+          ## Issues Found
+          [List any issues, or "None" if the code looks good]
+
+          ## Suggestions
+          [Optional improvements, or skip if none]
+          PROMPT_END
+          )
+
+          # Build the request payload
+          REQUEST_BODY=$(jq -n \
+            --arg prompt "$PROMPT" \
+            --arg pr_title "$PR_TITLE" \
+            --arg pr_body "$PR_BODY" \
+            --arg files "$CHANGED_FILES" \
+            --arg diff "$DIFF_CONTENT" \
+            '{
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 1024,
+              messages: [{
+                role: "user",
+                content: ($prompt + "\n\n## PR Title\n" + $pr_title + "\n\n## PR Description\n" + $pr_body + "\n\n## Changed Files\n" + $files + "\n\n## Diff\n```\n" + $diff + "\n```")
+              }]
+            }')
+
+          # Call Claude API
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d "$REQUEST_BODY")
+
+          # Extract the review text
+          REVIEW=$(echo "$RESPONSE" | jq -r '.content[0].text // "Error: Could not get review from Claude"')
+
+          # Save for next step
+          echo "$REVIEW" > review.txt
+
+          # Debug output
+          echo "Review generated successfully"
+
+      - name: Post review comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('review.txt', 'utf8');
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 Claude Code Review\n\n${review}\n\n---\n*Automated review powered by Claude*`
+            });

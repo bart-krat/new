@@ -35,14 +35,28 @@ function App() {
   const [algorithmUsed, setAlgorithmUsed] = useState<string | null>(null);
 
   useEffect(() => {
-    checkHealth().then(setConnected);
-    // Clear tasks on page load so they don't persist across refreshes
-    clearAllTasks().catch(() => {});
-    getConstraints().then((c) => {
-      setBlocks(c.available_blocks || []);
-      setWeights(c.category_weights || { work: 0.4, personal: 0.3, health: 0.3 });
-    }).catch(() => {});
-    getSchedule().then(setSchedule).catch(() => {});
+    const init = async () => {
+      // Check backend health
+      const isConnected = await checkHealth();
+      setConnected(isConnected);
+
+      // Clear tasks on page load (also clears schedule on backend)
+      await clearAllTasks().catch(() => {});
+
+      // Load saved constraints (but not schedule since we just cleared it)
+      try {
+        const c = await getConstraints();
+        setBlocks(c.available_blocks || []);
+        setWeights(c.category_weights || { work: 0.4, personal: 0.3, health: 0.3 });
+      } catch {
+        // Use defaults if fetch fails
+      }
+
+      // Don't fetch schedule - it was just cleared with tasks
+      setSchedule(null);
+    };
+
+    init();
   }, []);
 
   const handleSubmit = async (newTasks: string[]) => {
